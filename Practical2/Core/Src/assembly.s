@@ -35,23 +35,82 @@ ASM_Main:
 @ TODO: Add code, labels and logic for button checks and LED patterns
 
 main_loop:
-    ADDS R2, R2, #1
-    BL delay_long
-    B write_leds
+	@ Read buttons in
+	LDR  R3, GPIOA_BASE
+	LDR R3, [R3, #0x10]		@ location of buttons
 
-write_leds:
-	STR R2, [R1, #0x14]
-	B main_loop
 
-@ Delay loops
+    @ =============================================================================
+
+
+
+    @ =============================================================================
+
+    @ Check if SW2 is pressed
+    LDR R5, =4
+    MOVS R7, R3				@ Store location of buttons in R7
+    ANDS R7, R5				@ Checks last bit
+    CMP R7, #0				@ Checks if last bit was 0 or 1
+
+    @ if not 1 (was 0) skip long delay and go to else portion
+    BEQ else_SW2
+
+    @ =============================================================================
+
+    @ Check if SW3 is pressed
+    LDR R5, =8
+    MOVS R7, R3				@ Store location of buttons in R7
+    ANDS R7, R5				@ Checks if bits are 1110
+    CMP R7, #0				@ Checks if last bit was 0 or 1
+
+    @ if not 1 (was 0) skip long delay and go to SW3
+    BEQ main_loop
+
+
+@ If not of the buttons were pressed, this function gets run
 delay_long:
     PUSH {LR}
-    LDR  R3, LONG_DELAY_CNT
+    LDR  R3, LONG_DELAY_CNT		@ Long delay
+	B delay_loop
+
+@ else
+else_SW0:
+    BL delay_short			@ Call short delay
+
+write_leds:
+    ADDS R2, R2, #1
+	STR R2, [R1, #0x14]
+	B main_loop				@ Restart main loop
+
+@ Delay loops
+delay_short:
+    PUSH {LR}
+    LDR  R3, SHORT_DELAY_CNT	@ Short delay
 delay_loop:
     SUBS R3, R3, #1
     BNE  delay_loop
-    POP  {PC}
+    B write_leds
 
+else_SW1:
+	ADDS R2, R2, #1			@ First addition before second one
+
+	LDR  R3, GPIOA_BASE
+	LDR R3, [R3, #0x10]		@ location of buttons
+
+	@ Check if SW0 is pressed
+    LDR R5, =1
+    MOVS R7, R3				@ Store location of buttons in R7
+    ANDS R7, R5				@ Checks last bit
+    CMP R7, #0				@ Checks if last bit was 0 or 1
+
+    @ if not 1 (was 0) skip long delay and go to else portion
+    BEQ else_SW0			@ If SW0 pressed, go to it
+    B delay_long			@ else
+
+else_SW2:
+	MOVS R2, #0xAA			@ set pattern
+	STR R2, [R1, #0x14]		@ Have to set here otherwise write_leds will add one
+	B main_loop				@ Restart main loop
 
 
 @ LITERALS; DO NOT EDIT

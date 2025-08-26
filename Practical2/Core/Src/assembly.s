@@ -42,10 +42,27 @@ main_loop:
 
     @ =============================================================================
 
+	 @ Check if SW0 is pressed
+    LDR R5, =1
+    MOVS R7, R3				@ Store location of buttons in R7
+    ANDS R7, R5				@ Checks last bit
+    CMP R7, #0				@ Checks if last bit was 0 or 1
 
+    @ if not 1 (was 0) skip long delay and go to else portion
+    BEQ else_SW0
 
     @ =============================================================================
+    @ Check if SW1 is pressed
+    @ This is placed before SW0 so that the delay can still be decided
+    LDR R5, =2
+    MOVS R7, R3				@ Store location of buttons in R7
+    ANDS R7, R5				@ Checks last bit
+    CMP R7, #0				@ Checks if last bit was 0 or 1
 
+    @ if not 1 (was 0) skip long delay and go to else portion
+    BEQ else_SW1
+
+	@ =============================================================================
     @ Check if SW2 is pressed
     LDR R5, =4
     MOVS R7, R3				@ Store location of buttons in R7
